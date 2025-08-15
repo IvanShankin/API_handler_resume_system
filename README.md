@@ -120,3 +120,117 @@ AI -->> Notify: new_notifications (Kafka)
 
 Notify ->> User: Отправка результата (callback_url)
 ```
+
+## Отфильтрованные записи Kafka по топикам
+
+### Топик `uploading_data`
+1. **Микросервис Auth**  
+   ```python
+   topic = uploading_data
+   key = 'new_user'
+   json = {
+       'user_id': int,
+       'username': str,
+       'full_name': str,
+       'created_at': str,
+   }
+   ```
+
+2. **Микросервис Upload**  
+   - При создании нового резюме:  
+     ```python
+     topic = uploading_data
+     key = 'new_resume',
+     json = {
+         'resume_id': int,
+         'user_id': int,
+         'resume': str
+     }
+     ```
+   - При создании новых требований:  
+     ```python
+     topic = uploading_data
+     key = 'new_requirements',
+     json = {
+         'requirements_id': int,
+         'user_id': int,
+         'requirements': str
+     }
+     ```
+   - При удалении обработок:  
+     ```python
+     topic = uploading_data
+     key = 'delete_processing',
+     json = {
+         'processing_ids': List[int],
+         'user_id': int
+     }
+     ```
+   - При удалении требований:  
+     ```python
+     topic = uploading_data
+     key = 'delete_requirements',
+     json = {
+         'processings_ids': List[int],
+         'requirements_ids': List[int],
+         'user_id': int
+     }
+     ```
+
+3. **Микросервис AI_handler**  
+   - При успешном ответе от AI:  
+     ```python
+     topic = uploading_data
+     key = 'new_processing',
+     json = {
+         'processing_id': int,
+         'user_id': int,
+         'resume_id': int,
+         'requirements_id': int,
+         'score': int,
+         'matches': list,
+         'recommendation': str,
+         'verdict': str,
+     }
+     ```
+
+### Топик `AI_handler`
+1. **Микросервис Upload**  
+   - При отправке данных на обработку к AI:  
+     ```python
+     topic = AI_handler
+     key = 'new_request',
+     json = {
+         'callback_url': str,
+         'processing_id': int,
+         'user_id': int,
+         'resume_id': int,
+         'requirements_id': int,
+         'requirements': str,
+         'resume': str
+     }
+     ```
+
+### Топик `sending`
+1. **Микросервис AI_handler**  
+   - После обработки AI (всегда):  
+     ```python
+     topic = sending
+     key = 'new_sending',
+     json = {
+         "success": bool,
+         "response": dict{
+             "callback_url": str,
+             'processing_id': int,
+             'user_id': int,
+             'resume_id': int,
+             'requirements_id': int,
+             'score': int,
+             'matches': list,
+             'recommendation': str,
+             'verdict': str,
+         },
+         "message_error": str,
+         "wait_seconds": int,
+     }
+     ```

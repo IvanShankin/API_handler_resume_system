@@ -21,6 +21,7 @@
 * Ограничение активных сессий, защита от brute-force.
 * При регистрации отправляет событие `new_user` в Kafka (`uploading_data`).
 * Кэширует данные пользователей в Redis.
+* Ссылка: https://github.com/IvanShankin/API_handler_resume_auth_service
 
 ### 2. **Сервис получения данных от пользователя**
 
@@ -34,6 +35,7 @@
   * `delete_requirements`
   * `new_processing` (от AI)
 * Отправляет запросы на AI-обработку в Kafka (`AI_handler` → `new_request`).
+*  Ссылка: https://github.com/IvanShankin/API_handler_resume_upload_service
 
 ### 3. **Сервис управления данными пользователей**
 
@@ -47,21 +49,23 @@
   * `delete_requirements`
   * `new_processing`
 * Кэширует их в Redis.
+* Ссылка: https://github.com/IvanShankin/API_handler_resume_storage_service
 
 ### 4. **Сервис AI-обработки**
 ОБЯЗАТЕЛЬНО ОТПРАВЛЯТЬ ЗАПРОСЫ К GPT НЕ С ТЕРРИТОРИИ РФ
 * Получает из Kafka (`AI_handler`) события `new_request`.
 * Запрашивает OpenAI API для анализа резюме по требованиям.
 * Отправляет результаты:
-
   * В Kafka (`notifications`) → для отправки пользователю.
   * В Kafka (`uploading_data`) → для сохранения в БД.
+* Ссылка: https://github.com/IvanShankin/API_handler_resume_AI_handler_service
 
 ### 5. **Сервис уведомлений**
 
 * Получает из Kafka (`notifications`) события `new_notifications`.
 * Отправляет результаты анализа или сообщения об ошибках на `callback_url`.
 * Кэширует метки обработанных уведомлений в Redis.
+* Ссылка: https://github.com/IvanShankin/API_handler_resume_notifications_service
 
 ---
 

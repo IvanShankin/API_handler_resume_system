@@ -44,18 +44,18 @@ services:
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
-      test: [ "CMD", "nc", "-z", "localhost", "29092" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      test: [ "CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:29092", "--list" ]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 90s
     networks:
       - backend
 
   # ---------- Microservices ----------
 
   auth:
-    image: vanomdoc/api_handler_resume_auth_service:1.0.0
+    image: vanomdoc/api_handler_resume_auth_service:1.0.1
     env_file:
       - .env
     environment:
@@ -63,15 +63,18 @@ services:
     ports:
       - "7001:8000"
     depends_on:
-      - postgres
-      - redis
-      - kafka
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
     restart: unless-stopped
     networks:
       - backend
 
   upload:
-    image: vanomdoc/api_handler_resume_upload_service:1.0.0
+    image: vanomdoc/api_handler_resume_upload_service:1.0.1
     environment:
       - DB_NAME=api_handler_resume_upload_service
     env_file:
@@ -79,15 +82,18 @@ services:
     ports:
       - "7002:8000"
     depends_on:
-      - postgres
-      - redis
-      - kafka
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
     restart: unless-stopped
     networks:
       - backend
 
   storage:
-    image: vanomdoc/api_handler_resume_storage_service:1.0.0
+    image: vanomdoc/api_handler_resume_storage_service:1.0.1
     environment:
       - DB_NAME=api_handler_resume_storage_service
     env_file:
@@ -95,20 +101,25 @@ services:
     ports:
       - "7003:8000"
     depends_on:
-      - postgres
-      - redis
-      - kafka
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
     restart: unless-stopped
     networks:
       - backend
 
   ai_handler:
-    image: vanomdoc/api_handler_resume_ai_handler_service:1.0.0
+    image: vanomdoc/api_handler_resume_ai_handler_service:1.0.1
     env_file:
       - .env
     depends_on:
-      - redis
-      - kafka
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
     networks:
       - backend
@@ -131,7 +142,6 @@ services:
 networks:
   backend:
     driver: bridge
-
 
 
 volumes:
